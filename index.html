@@ -2264,6 +2264,7 @@ function goHome() {
   document.getElementById('landing').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('leaderboard').style.display = 'none';
+  if (typeof _lbUnsubscribe === 'function') { _lbUnsubscribe(); _lbUnsubscribe = null; }
   document.getElementById('pnlPanel').classList.remove('show');
   document.getElementById('chartPanel').classList.remove('show');
   document.getElementById('calPanel').classList.remove('show');
@@ -2927,23 +2928,50 @@ function renderCal() {
     const isToday = today.getDate()===d && today.getMonth()===calMonth && today.getFullYear()===calYear;
     cell.className = 'cal-cell' + (isToday?' today-cell':'');
     if (trades.length) {
-      const wins = trades.filter(r=>r.type==='win').length;
+      const wins   = trades.filter(r=>r.type==='win').length;
       const losses = trades.filter(r=>r.type==='lose').length;
-      const result = wins>0&&losses>0?'mixed':wins>0?'win':'lose';
+      const net    = trades.reduce((s,r)=>s+(r.pnl||0),0);
+
+      // Use net P&L to decide colour — positive net = green, negative = red, zero = amber
+      const result = net > 0 ? 'win' : net < 0 ? 'lose' : 'mixed';
       cell.className += ' has-trade ' + result;
-      const net = trades.reduce((s,r)=>s+(r.pnl||0),0);
+
+      // Intensity: scale opacity by size relative to best day this month
+      // Small P&L = more transparent, large P&L = more solid (original colour)
+      const allNets = Object.values(dayMap).map(ts => Math.abs(ts.reduce((s,r)=>s+(r.pnl||0),0)));
+      const maxNet  = Math.max(...allNets, 1);
+      const pct     = Math.min(Math.max(Math.abs(net) / maxNet, 0.15), 1); // 0.15–1.0
+
+      if (result === 'win') {
+        // Original green: rgba(0,230,118,0.28) — scale opacity 0.10 → 0.28
+        const alpha = 0.10 + pct * 0.32;
+        cell.style.background  = `rgba(0,230,118,${alpha})`;
+        cell.style.borderColor = `rgba(0,230,118,${Math.min(alpha + 0.22, 1)})`;
+      } else if (result === 'lose') {
+        const alpha = 0.08 + pct * 0.32;
+        cell.style.background  = `rgba(255,23,68,${alpha})`;
+        cell.style.borderColor = `rgba(255,23,68,${Math.min(alpha + 0.22, 1)})`;
+      } else {
+        // Original amber: rgba(255,213,79,0.28)
+        cell.style.background  = `rgba(255,213,79,0.22)`;
+        cell.style.borderColor = `rgba(255,213,79,0.45)`;
+      }
+
       // Day number
       const dayNum = document.createElement('div');
       dayNum.className = 'cal-cell-day'; dayNum.textContent = d;
       cell.appendChild(dayNum);
-      // Net PnL amount
+
+      // Net PnL text — use currency symbol
       if (net !== 0) {
         const pnlEl = document.createElement('div');
         pnlEl.className = 'cal-cell-pnl';
+        const sym = (typeof activeCurrency !== 'undefined' && activeCurrency) ? activeCurrency.symbol : '₹';
         const abs = Math.abs(net);
-        pnlEl.textContent = (net>0?'+':'-') + '₹' + (abs>=1000 ? (abs/1000).toFixed(1)+'k' : abs.toFixed(0));
+        pnlEl.textContent = (net>0?'+':'-') + sym + (abs>=1000?(abs/1000).toFixed(1)+'k':abs.toFixed(0));
         cell.appendChild(pnlEl);
       }
+
       const label = new Date(calYear, calMonth, d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
       cell.title = `${label} · ${trades.length} trade${trades.length>1?'s':''} · Net ${fmtRs(net)}`;
       cell.addEventListener('click', () => openDayPopup(trades, label));
@@ -3413,6 +3441,7 @@ function openLeaderboard() {
 function closeLeaderboard() {
   document.getElementById('leaderboard').style.display = 'none';
   document.getElementById('landing').style.display     = 'flex';
+  if (_lbUnsubscribe) { _lbUnsubscribe(); _lbUnsubscribe = null; }
 }
 
 function updateOptInSub() {
@@ -3467,20 +3496,37 @@ async function publishMyStats() {
   } catch(e) { console.warn('Leaderboard publish failed:', e); }
 }
 
+let _lbUnsubscribe = null;
+
 async function loadLeaderboard() {
   document.getElementById('lbLoading').style.display = 'block';
   document.getElementById('lbTable').style.display   = 'none';
   document.getElementById('lbUpdated').textContent   = '';
+
+  // Cancel previous listener
+  if (_lbUnsubscribe) { _lbUnsubscribe(); _lbUnsubscribe = null; }
+
   try {
-    const snap = await db.collection('leaderboard').get();
-    if (snap.empty) {
-      showLbEmpty('No traders on the leaderboard yet.\nBe the first — enable your stats above! 🚀');
-      return;
-    }
-    const entries = snap.docs.map(d => d.data());
-    renderLeaderboard(entries);
-    const latest = Math.max(...entries.map(e => e.updatedAt || 0));
-    document.getElementById('lbUpdated').textContent = `Last updated ${timeSince(latest)}`;
+    // Real-time — updates instantly when any user saves/deletes trades
+    _lbUnsubscribe = db.collection('leaderboard').onSnapshot(snap => {
+      const SIXTY_DAYS = 60 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      const entries = snap.docs
+        .map(d => d.data())
+        .filter(e =>
+          e.total > 0 &&
+          (!e.updatedAt || now - e.updatedAt < SIXTY_DAYS)
+        );
+      if (!entries.length) {
+        showLbEmpty('No traders on the leaderboard yet.\nBe the first — enable your stats above! 🚀');
+        return;
+      }
+      renderLeaderboard(entries);
+      const latest = Math.max(...entries.map(e => e.updatedAt || 0));
+      document.getElementById('lbUpdated').textContent = `🟢 Live · updated ${timeSince(latest)}`;
+    }, () => {
+      showLbEmpty('Could not load leaderboard. Try again shortly.');
+    });
   } catch(e) {
     showLbEmpty('Could not load leaderboard. Try again shortly.');
   }
@@ -3550,11 +3596,14 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// Auto-publish stats whenever trades are saved (if opted in)
+// Auto-publish stats whenever trades are saved or deleted (if opted in)
 const _origSave = saveToStorage;
 saveToStorage = async function() {
   await _origSave();
-  if (lbOptedIn) await publishMyStats();
+  if (lbOptedIn) {
+    clearTimeout(window._lbPublishTimer);
+    window._lbPublishTimer = setTimeout(() => publishMyStats(), 600);
+  }
 };
 
 // ══ HOOK ALL UPDATES ══════════════════════════════════
