@@ -1228,22 +1228,29 @@ body.light .cal-cell.mixed .cal-cell-pnl{color:#8a5500;}
 .lb-tab.active{background:var(--s1);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,0.3);}
 .lb-loading{text-align:center;color:#40c4ff;font-size:0.7rem;letter-spacing:0.1em;padding:2rem;}
 .lb-table{width:min(960px,100%);}
-.lb-row{display:grid;grid-template-columns:2.2rem 1fr auto auto;gap:0.7rem;align-items:center;background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:0.85rem 1rem;margin-bottom:0.5rem;transition:border-color 0.15s;}
-.lb-row.me{border-color:rgba(255,213,79,0.45);background:rgba(255,213,79,0.03);}
+.lb-row{display:flex;align-items:center;gap:0.7rem;background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:0.9rem 1rem;margin-bottom:0.6rem;transition:border-color 0.15s;}
+.lb-row.me{border-color:rgba(255,213,79,0.5);background:rgba(255,213,79,0.03);}
 .lb-row.top1{border-color:rgba(255,213,79,0.5);}
-.lb-row.top2{border-color:rgba(192,192,192,0.4);}
-.lb-row.top3{border-color:rgba(205,127,50,0.4);}
-.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--muted);text-align:center;}
+.lb-row.top2{border-color:rgba(192,192,192,0.35);}
+.lb-row.top3{border-color:rgba(205,127,50,0.35);}
+.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--muted);min-width:1.8rem;text-align:center;flex-shrink:0;}
 .lb-rank.gold{color:var(--gold);}
 .lb-rank.silver{color:#c0c0c0;}
 .lb-rank.bronze{color:#cd7f32;}
-.lb-user{font-size:0.78rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.lb-user-you{font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;background:rgba(255,213,79,0.15);color:var(--gold);border:1px solid rgba(255,213,79,0.3);border-radius:100px;padding:0.1rem 0.45rem;margin-left:0.4rem;vertical-align:middle;}
-.lb-stat{text-align:right;}
+.lb-user{font-size:0.78rem;color:var(--text);flex:1;min-width:0;}
+.lb-user-you{font-size:0.48rem;letter-spacing:0.12em;text-transform:uppercase;background:rgba(255,213,79,0.15);color:var(--gold);border:1px solid rgba(255,213,79,0.3);border-radius:100px;padding:0.1rem 0.45rem;margin-left:0.4rem;vertical-align:middle;}
+.lb-stat{text-align:center;flex-shrink:0;}
 .lb-stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;}
 .lb-stat-val.g{color:var(--win);}
 .lb-stat-val.r{color:var(--lose);}
-.lb-stat-lbl{font-size:0.5rem;letter-spacing:0.14em;text-transform:uppercase;color:#40c4ff;}
+.lb-stat-val.b{color:var(--blue);}
+.lb-stat-lbl{font-size:0.48rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);}
+.lb-mini-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:0.45rem 0.7rem;text-align:center;min-width:52px;flex-shrink:0;}
+.lb-mini-card.gc{border-color:rgba(0,230,118,0.35);}
+.lb-mini-card.rc{border-color:rgba(255,23,68,0.3);}
+.lb-mini-card.bc{border-color:rgba(64,196,255,0.3);}
+.lb-mini-card.pc{border-color:rgba(255,213,79,0.3);}
+@media(max-width:600px){.lb-mini-card{min-width:40px;padding:0.35rem 0.5rem;}.lb-stat-val{font-size:0.9rem;}}
 .lb-empty{text-align:center;color:#40c4ff;font-size:0.7rem;letter-spacing:0.08em;padding:2rem 0;line-height:2.2;}
 .lb-updated{font-size:0.55rem;color:var(--muted);text-align:center;margin-top:0.8rem;letter-spacing:0.08em;}
 </style>
@@ -1481,9 +1488,8 @@ body.light .cal-cell.mixed .cal-cell-pnl{color:#8a5500;}
   </div>
 
   <!-- Sort tabs -->
-  <div class="lb-tabs">
-    <button class="lb-tab active" onclick="switchLbTab('pnl',this)">💰 Net P&L</button>
-    <button class="lb-tab" onclick="switchLbTab('rate',this)">🎯 Win Rate</button>
+  <div style="font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;">
+    Showing traders with the same monthly goal as you
   </div>
 
   <div class="lb-loading" id="lbLoading">Loading traders…</div>
@@ -1609,7 +1615,7 @@ body.light .cal-cell.mixed .cal-cell-pnl{color:#8a5500;}
       <span class="mapper-hint">win/loss column</span>
     </div>
     <div class="mapper-row">
-      <span class="mapper-label">Company</span>
+      <span class="mapper-label">Instrument</span>
       <select class="mapper-select" id="mapCompany"><option value="">— none —</option></select>
     </div>
     <div class="mapper-row">
@@ -1806,10 +1812,13 @@ body.light .cal-cell.mixed .cal-cell-pnl{color:#8a5500;}
       <span class="tag-chip" onclick="toggleTag(this,'Reversal')">Reversal</span>
       <span class="tag-chip" onclick="toggleTag(this,'News')">News</span>
     </div>
-    <input type="text" class="tag-custom-input" id="tagCustom" placeholder="Custom tag…">
+    <div style="display:flex;gap:0.5rem;margin-bottom:1.1rem;">
+      <input type="text" class="tag-custom-input" id="tagCustom" placeholder="Type tag + press Enter to save…" style="margin-bottom:0;" onkeydown="saveCustomTag(event)">
+      <button onclick="saveCustomTag({key:'Enter'})" style="background:var(--s2);border:1px solid var(--border);color:var(--blue);border-radius:8px;padding:0 0.8rem;font-size:0.7rem;cursor:pointer;white-space:nowrap;font-family:'DM Mono',monospace;">+ Save</button>
+    </div>
 
     <div class="amount-actions">
-      <button class="amount-skip" onclick="confirmAmount(true)">Skip</button>
+      <button class="amount-skip" onclick="cancelAmount()">Cancel</button>
       <button class="amount-confirm" id="amountConfirmBtn" onclick="confirmAmount(false)">Confirm</button>
     </div>
   </div>
@@ -2299,11 +2308,16 @@ function triggerManual(type) {
   document.getElementById('btnBuy').className  = 'trade-type-btn';
   document.getElementById('btnSell').className = 'trade-type-btn';
   resetTags();
+  loadCustomTags();
   // default date to today
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('amountDate').value = today;
   document.getElementById('amountBackdrop').classList.add('show');
   setTimeout(() => input.focus(), 260);
+}
+
+function cancelAmount() {
+  document.getElementById('amountBackdrop').classList.remove('show');
 }
 
 async function confirmAmount(skip) {
@@ -2360,9 +2374,9 @@ function handleFile(file) {
   reader.onload = e => {
     try {
       const data = new Uint8Array(e.target.result);
-      const wb   = XLSX.read(data, {type:'array', cellDates:true});
+      const wb   = XLSX.read(data, {type:'array', cellDates:false});
       const ws   = wb.Sheets[wb.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(ws, {defval:''});
+      const json = XLSX.utils.sheet_to_json(ws, {defval:null, raw:true});
       if (!json.length) { alert('Sheet appears empty!'); return; }
       sheetData = json;
       document.getElementById('fileName').textContent = file.name;
@@ -2405,7 +2419,27 @@ document.getElementById('btnApply').addEventListener('click', () => {
     notes:   document.getElementById('mapNotes').value,
   };
   results = [];
+  let skippedCTC = 0;
+  let lastKnownDate = null; // carry forward last known date
+
   sheetData.forEach((row, i) => {
+    // ── Carry forward date ──────────────────────────
+    const dateVal = colMap.date ? row[colMap.date] : null;
+    if (colMap.date && dateVal !== undefined && dateVal !== null && dateVal !== '') {
+      lastKnownDate = dateVal;
+    } else if (lastKnownDate !== null && colMap.date) {
+      row = { ...row, [colMap.date]: lastKnownDate };
+    }
+
+    // ── Skip CTC entries ────────────────────────────
+    if (colMap.pnl) {
+      const rawPnl = String(row[colMap.pnl] ?? '').trim().toUpperCase();
+      if (rawPnl === 'CTC' || rawPnl === 'C.T.C' || rawPnl === 'CARRY') {
+        skippedCTC++;
+        return; // skip this row
+      }
+    }
+
     let type = null;
     if (colMap.result) {
       const val = String(row[colMap.result] ?? '').toLowerCase().trim();
@@ -2421,8 +2455,21 @@ document.getElementById('btnApply').addEventListener('click', () => {
       results.push({ type, pnl: pv, data: row, rowIndex: i + 1 });
     }
   });
+
   document.getElementById('colMapper').classList.remove('show');
-  // Auto-navigate calendar to first trade's month
+
+  // Show warning if CTC trades were skipped
+  if (skippedCTC > 0) {
+    setTimeout(() => {
+      const msg = document.createElement('div');
+      msg.style.cssText = 'position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);background:#1e1e2e;border:1px solid rgba(255,213,79,0.5);color:#ffd54f;font-family:"DM Mono",monospace;font-size:0.7rem;padding:0.7rem 1.2rem;border-radius:10px;z-index:999;letter-spacing:0.08em;';
+      msg.textContent = `⚠️ ${skippedCTC} CTC trade${skippedCTC>1?'s':''} skipped`;
+      document.body.appendChild(msg);
+      setTimeout(() => msg.remove(), 4000);
+    }, 500);
+  }
+
+  // Auto-navigate calendar to first trade month
   const firstDate = results.map(r => getTradeDate(r)).find(d => d !== null);
   if (firstDate) { calYear = firstDate.getFullYear(); calMonth = firstDate.getMonth(); }
   updateAll();
@@ -2700,6 +2747,63 @@ function getTag() {
   return custom || selectedTag || null;
 }
 
+// ── Custom tag saving ─────────────────────────────────
+const DEFAULT_TAGS = ['Scalp','Swing','Breakout','Reversal','News'];
+
+function loadCustomTags() {
+  const saved = JSON.parse(localStorage.getItem('tt_custom_tags') || '[]');
+  const row = document.getElementById('tagsRow');
+  saved.forEach(tag => {
+    if (!document.querySelector(`.tag-chip[data-tag="${tag}"]`)) {
+      addTagChip(tag, row);
+    }
+  });
+}
+
+function addTagChip(tag, row) {
+  const chip = document.createElement('span');
+  chip.className = 'tag-chip';
+  chip.setAttribute('data-tag', tag);
+  chip.textContent = tag;
+  chip.onclick = () => toggleTag(chip, tag);
+  chip.oncontextmenu = (e) => { e.preventDefault(); removeCustomTag(tag, chip); };
+  chip.title = 'Right-click to delete';
+  row.appendChild(chip);
+}
+
+function saveCustomTag(e) {
+  if (e.key !== 'Enter') return;
+  const input = document.getElementById('tagCustom');
+  const tag = input.value.trim();
+  if (!tag) return;
+  // Don't duplicate default or existing
+  const existing = [...document.querySelectorAll('.tag-chip')].map(c => c.textContent.trim().toLowerCase());
+  if (existing.includes(tag.toLowerCase())) {
+    // Just select it instead
+    const found = [...document.querySelectorAll('.tag-chip')].find(c => c.textContent.trim().toLowerCase() === tag.toLowerCase());
+    if (found) toggleTag(found, found.textContent.trim());
+    input.value = '';
+    return;
+  }
+  // Save to localStorage
+  const saved = JSON.parse(localStorage.getItem('tt_custom_tags') || '[]');
+  if (!saved.includes(tag)) { saved.push(tag); localStorage.setItem('tt_custom_tags', JSON.stringify(saved)); }
+  // Add chip
+  const row = document.getElementById('tagsRow');
+  addTagChip(tag, row);
+  // Auto-select the new tag
+  const newChip = row.lastElementChild;
+  toggleTag(newChip, tag);
+  input.value = '';
+}
+
+function removeCustomTag(tag, chip) {
+  if (!confirm(`Delete tag "${tag}"?`)) return;
+  const saved = JSON.parse(localStorage.getItem('tt_custom_tags') || '[]');
+  localStorage.setItem('tt_custom_tags', JSON.stringify(saved.filter(t => t !== tag)));
+  chip.remove();
+}
+
 // ══ MONTHLY GOAL TRACKER ═════════════════════════════
 let monthlyGoal = null;
 
@@ -2709,6 +2813,12 @@ function setDualGoal(period) {
   monthlyGoal = v;
   document.getElementById('goalPanel').classList.add('show');
   updateGoal();
+  // Save new goal + republish leaderboard with updated goal
+  saveToStorage();
+  if (lbOptedIn) {
+    clearTimeout(window._lbPublishTimer);
+    window._lbPublishTimer = setTimeout(() => publishMyStats(), 600);
+  }
 }
 
 function updateGoal() {
@@ -2879,18 +2989,50 @@ function getTradeDate(r) {
       if (!isNaN(d)) return d;
     }
   }
-  // Sheet mode: r.data[colMap.date] is a JS Date object or a date string/number
-  if (r.data && colMap.date && r.data[colMap.date] !== undefined && r.data[colMap.date] !== '') {
+  // Sheet mode
+  if (r.data && colMap.date && r.data[colMap.date] !== undefined && r.data[colMap.date] !== null && r.data[colMap.date] !== '') {
     const raw = r.data[colMap.date];
-    if (raw instanceof Date && !isNaN(raw)) return raw;
-    // XLSX serial number (number)
+
+    // Excel serial number (raw:true) — most reliable, no timezone issues
     if (typeof raw === 'number') {
-      const d = new Date(Math.round((raw - 25569) * 86400 * 1000));
-      if (!isNaN(d)) return d;
+      // Excel serial: days since 1900-01-01 (with leap year bug offset)
+      const utc = new Date(Math.round((raw - 25569) * 86400 * 1000));
+      if (!isNaN(utc)) return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate());
     }
-    // String date fallback
-    const d = new Date(raw);
-    if (!isNaN(d)) return d;
+
+    // JS Date object fallback
+    if (raw instanceof Date && !isNaN(raw)) {
+      return new Date(raw.getUTCFullYear(), raw.getUTCMonth(), raw.getUTCDate());
+    }
+
+    // String fallbacks (in case user has text dates)
+    if (typeof raw === 'string' && raw.trim()) {
+      const s = raw.trim();
+      let m;
+
+      // DD-MM-YYYY or DD/MM/YYYY (Indian format — day first)
+      m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+      if (m && +m[1] > 12) return new Date(+m[3], +m[2]-1, +m[1]);
+      if (m && +m[2] > 12) return new Date(+m[3], +m[1]-1, +m[2]);
+      if (m) return new Date(+m[3], +m[1]-1, +m[2]); // assume DD-MM-YYYY
+
+      // YYYY-MM-DD
+      m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+
+      // DD-MM-YY or DD/MM/YY (2 digit year)
+      m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2})$/);
+      if (m) {
+        const yr = +m[3] <= 49 ? 2000 + +m[3] : 1900 + +m[3];
+        return new Date(yr, +m[1]-1, +m[2]);
+      }
+
+      // "12 Dec 2025"
+      const mNames = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+      m = s.match(/^(\d{1,2})\s+([a-z]{3})\s+(\d{4})$/i);
+      if (m && mNames[m[2].toLowerCase()] !== undefined)
+        return new Date(+m[3], mNames[m[2].toLowerCase()], +m[1]);
+    }
   }
   return null;
 }
@@ -2932,25 +3074,21 @@ function renderCal() {
       const net    = trades.reduce((s,r)=>s+(r.pnl||0),0);
       const result = net > 0 ? 'win' : net < 0 ? 'lose' : 'mixed';
       cell.className += ' has-trade ' + result;
-
-      // Intensity: small P&L = transparent, big P&L = solid
-      const allNets = Object.values(dayMap).map(ts => Math.abs(ts.reduce((s,r)=>s+(r.pnl||0),0)));
+      const allNets = Object.values(dayMap).map(ts=>Math.abs(ts.reduce((s,r)=>s+(r.pnl||0),0)));
       const maxNet  = Math.max(...allNets, 1);
-      const pct     = Math.min(Math.max(Math.abs(net) / maxNet, 0.15), 1);
-
+      const pct     = Math.min(Math.max(Math.abs(net)/maxNet, 0.15), 1);
       if (result === 'win') {
-        const alpha = 0.10 + pct * 0.32;
-        cell.style.background  = `rgba(0,230,118,${alpha})`;
-        cell.style.borderColor = `rgba(0,230,118,${Math.min(alpha+0.22,1)})`;
+        const a = 0.10 + pct * 0.32;
+        cell.style.background  = `rgba(0,230,118,${a})`;
+        cell.style.borderColor = `rgba(0,230,118,${Math.min(a+0.22,1)})`;
       } else if (result === 'lose') {
-        const alpha = 0.08 + pct * 0.32;
-        cell.style.background  = `rgba(255,23,68,${alpha})`;
-        cell.style.borderColor = `rgba(255,23,68,${Math.min(alpha+0.22,1)})`;
+        const a = 0.08 + pct * 0.32;
+        cell.style.background  = `rgba(255,23,68,${a})`;
+        cell.style.borderColor = `rgba(255,23,68,${Math.min(a+0.22,1)})`;
       } else {
         cell.style.background  = `rgba(255,213,79,0.22)`;
         cell.style.borderColor = `rgba(255,213,79,0.45)`;
       }
-
       const dayNum = document.createElement('div');
       dayNum.className = 'cal-cell-day'; dayNum.textContent = d;
       cell.appendChild(dayNum);
@@ -3414,25 +3552,31 @@ window.addEventListener('appinstalled', () => {
 // ══ LEADERBOARD ═══════════════════════════════════════
 const LB_KEY     = 'tt_lb_';       // shared storage prefix
 const LB_OPT_KEY = 'tt_lb_optin';  // per-user opt-in flag
-let lbSortMode   = 'pnl';
+let lbSortMode   = 'goal'; // single mode now
 let lbOptedIn    = false;
 
 async function openLeaderboard() {
   document.getElementById('landing').style.display    = 'none';
   document.getElementById('leaderboard').style.display = 'flex';
-  // Restore opt-in state
   const saved = localStorage.getItem(LB_OPT_KEY + '_' + currentUser);
   lbOptedIn = saved === '1';
   document.getElementById('lbOptinToggle').checked = lbOptedIn;
   updateOptInSub();
-  // Make sure trades are loaded before publishing
-  if (!results.length && currentUid) {
+  // Load trades + monthlyGoal from Firestore before rendering
+  if ((!results.length || !monthlyGoal) && currentUid) {
     try {
       const snap = await db.collection('journals').doc(currentUid).get();
-      if (snap.exists) results = snap.data().trades || [];
+      if (snap.exists) {
+        const d = snap.data();
+        if (!results.length) results = d.trades || [];
+        if (!monthlyGoal && d.monthlyGoal) {
+          monthlyGoal = d.monthlyGoal;
+          const gi = document.getElementById('monthlyGoalInput');
+          if (gi) gi.value = monthlyGoal;
+        }
+      }
     } catch(e) {}
   }
-  // Re-publish stats with fresh data every time leaderboard opens
   if (lbOptedIn && results.length) await publishMyStats();
   loadLeaderboard();
 }
@@ -3454,22 +3598,7 @@ async function toggleLeaderboardOptIn() {
   localStorage.setItem(LB_OPT_KEY + '_' + currentUser, lbOptedIn ? '1' : '0');
   updateOptInSub();
   if (lbOptedIn) {
-    // Load trades fresh from Firestore before publishing
-    if (!results.length && currentUid) {
-      try {
-        const snap = await db.collection('journals').doc(currentUid).get();
-        if (snap.exists) results = snap.data().trades || [];
-      } catch(e) {}
-    }
     await publishMyStats();
-    if (!results.length) {
-      alert('No trades found! Please log some trades first, then enable the leaderboard.');
-      lbOptedIn = false;
-      document.getElementById('lbOptinToggle').checked = false;
-      localStorage.setItem(LB_OPT_KEY + '_' + currentUser, '0');
-      updateOptInSub();
-      return;
-    }
   } else {
     // Remove from shared leaderboard
     try { await db.collection('leaderboard').doc(currentUid).delete(); } catch(e){}
@@ -3505,6 +3634,7 @@ async function publishMyStats() {
       username: currentUser, wins, losses, total,
       netPnl: parseFloat(netPnl.toFixed(2)),
       monthlyNet: parseFloat(monthlyNet.toFixed(2)),
+      monthlyGoal: monthlyGoal || 0,
       winRate, updatedAt: Date.now()
     });
   } catch(e) { console.warn('Leaderboard publish failed:', e); }
@@ -3516,16 +3646,10 @@ async function loadLeaderboard() {
   document.getElementById('lbLoading').style.display = 'block';
   document.getElementById('lbTable').style.display   = 'none';
   document.getElementById('lbUpdated').textContent   = '';
-
   if (_lbUnsubscribe) { _lbUnsubscribe(); _lbUnsubscribe = null; }
-
   try {
     _lbUnsubscribe = db.collection('leaderboard').onSnapshot(snap => {
-      // Show ALL entries with trades — no 60 day filter (too aggressive)
-      const entries = snap.docs
-        .map(d => d.data())
-        .filter(e => e.total > 0);
-
+      const entries = snap.docs.map(d => d.data()).filter(e => e.total > 0);
       if (!entries.length) {
         showLbEmpty('No traders on the leaderboard yet.\nBe the first — enable your stats above! 🚀');
         return;
@@ -3533,9 +3657,7 @@ async function loadLeaderboard() {
       renderLeaderboard(entries);
       const latest = Math.max(...entries.map(e => e.updatedAt || 0));
       document.getElementById('lbUpdated').textContent = `🟢 Live · updated ${timeSince(latest)}`;
-    }, () => {
-      showLbEmpty('Could not load leaderboard. Try again shortly.');
-    });
+    }, () => showLbEmpty('Could not load leaderboard. Try again shortly.'));
   } catch(e) {
     showLbEmpty('Could not load leaderboard. Try again shortly.');
   }
@@ -3546,38 +3668,80 @@ function renderLeaderboard(entries) {
   const table = document.getElementById('lbTable');
   table.style.display = 'block';
 
-  // Sort based on current tab
-  const sorted = [...entries].sort((a, b) =>
-    lbSortMode === 'pnl'
-      ? b.monthlyNet - a.monthlyNet
-      : b.winRate   - a.winRate
-  );
-
-  const medals = ['🥇','🥈','🥉'];
+  const medals  = ['🥇','🥈','🥉'];
   const rankCls = ['gold','silver','bronze'];
   const rowCls  = ['top1','top2','top3'];
+  const sym     = activeCurrency ? activeCurrency.symbol : '₹';
+  const myGoal  = monthlyGoal || 0;
 
-  table.innerHTML = sorted.map((e, i) => {
-    const isMe   = e.username === currentUser;
-    const medal  = i < 3 ? medals[i] : `#${i + 1}`;
-    const rCls   = i < 3 ? rankCls[i] : '';
-    const rowC   = i < 3 ? rowCls[i]  : '';
-    const pnlCls = e.monthlyNet >= 0 ? 'g' : 'r';
+  // No goal set — show message
+  if (!myGoal) {
+    table.innerHTML = `<div class="lb-empty">You haven't set a monthly goal yet.<br>Set your goal first to compete with traders who have the same target! 🎯</div>`;
+    return;
+  }
+
+  // Filter traders with same goal (within 10% tolerance)
+  const sameGoal = entries.filter(e => {
+    const g = e.monthlyGoal || 0;
+    if (!g) return false;
+    return Math.abs(g - myGoal) / myGoal <= 0.10;
+  });
+
+  if (!sameGoal.length) {
+    table.innerHTML = `<div class="lb-empty">No other traders have a ${sym}${myGoal.toLocaleString('en-IN')} monthly goal yet.<br>Be the first in your goal group! 🚀</div>`;
+    return;
+  }
+
+  // Sort by % of goal achieved
+  const sorted = [...sameGoal].sort((a, b) => {
+    const pA = a.monthlyGoal ? (a.monthlyNet / a.monthlyGoal) : 0;
+    const pB = b.monthlyGoal ? (b.monthlyNet / b.monthlyGoal) : 0;
+    return pB - pA;
+  });
+
+  let html = `<div style="font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:#40c4ff;padding:0.4rem 0 0.8rem;border-bottom:1px solid var(--border);margin-bottom:0.6rem;">🎯 ${sym}${myGoal.toLocaleString('en-IN')} goal group · ${sorted.length} trader${sorted.length>1?'s':''}</div>`;
+
+  sorted.forEach((e, i) => {
+    const isMe    = e.username === currentUser;
+    const medal   = i < 3 ? medals[i] : `#${i+1}`;
+    const rCls    = i < 3 ? rankCls[i] : '';
+    const rowC    = i < 3 ? rowCls[i]  : '';
+    const pnlCls  = e.monthlyNet >= 0 ? 'g' : 'r';
+    const goalPct = e.monthlyGoal ? Math.round((e.monthlyNet / e.monthlyGoal) * 100) : 0;
+    const barW    = Math.min(Math.max(goalPct, 0), 100);
     const youBadge = isMe ? `<span class="lb-user-you">YOU</span>` : '';
-    return `
-    <div class="lb-row ${rowC} ${isMe ? 'me' : ''}">
+    // Same gradient bar as goal panel: blue→green normal, green→gold over 100%, red→orange negative
+    const barCls = goalPct >= 100 ? 'over' : goalPct < 0 ? 'neg' : '';
+    // month label like "MAR 2026"
+    const now = new Date();
+    const mLbl = now.toLocaleDateString('en-IN',{month:'short',year:'numeric'}).toUpperCase();
+    html += `<div class="lb-row ${rowC} ${isMe?'me':''}">
       <div class="lb-rank ${rCls}">${medal}</div>
-      <div class="lb-user">${escHtml(e.username)}${youBadge}</div>
-      <div class="lb-stat">
-        <div class="lb-stat-val ${pnlCls}">${fmtRs(e.monthlyNet)}</div>
-        <div class="lb-stat-lbl">This Month</div>
+      <div class="lb-user">
+        <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.35rem;">
+          <span style="font-weight:600;">${escHtml(e.username)}</span>${youBadge}
+        </div>
+        <div style="font-size:0.5rem;color:#40c4ff;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.4rem;">${mLbl}</div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div class="goal-track" style="flex:1;">
+            <div class="goal-track-fill ${barCls}" style="width:${barW}%;"></div>
+          </div>
+          <span style="font-size:0.52rem;color:#40c4ff;white-space:nowrap;letter-spacing:0.08em;">${goalPct}% of goal</span>
+        </div>
+        <div style="margin-top:0.35rem;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.05em;">
+          <span style="color:#fff;">${fmtRs(e.monthlyNet)}</span>
+          <span style="color:var(--muted);font-size:0.75rem;"> / </span>
+          <span style="color:var(--muted);font-size:0.75rem;">${fmtRsAbs(e.monthlyGoal)}</span>
+        </div>
       </div>
-      <div class="lb-stat">
-        <div class="lb-stat-val">${e.winRate}%</div>
-        <div class="lb-stat-lbl">Win Rate</div>
-      </div>
+      <div class="lb-mini-card gc"><div class="lb-stat-val g">${e.wins}</div><div class="lb-stat-lbl">Wins</div></div>
+      <div class="lb-mini-card rc"><div class="lb-stat-val r">${e.losses}</div><div class="lb-stat-lbl">Losses</div></div>
+      <div class="lb-mini-card bc"><div class="lb-stat-val b">${e.winRate}%</div><div class="lb-stat-lbl">Win Rate</div></div>
+      <div class="lb-mini-card pc"><div class="lb-stat-val ${pnlCls}">${fmtRs(e.monthlyNet)}</div><div class="lb-stat-lbl">This Month</div></div>
     </div>`;
-  }).join('');
+  });
+
+  table.innerHTML = html;
 }
 
 function showLbEmpty(msg) {
