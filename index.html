@@ -2042,7 +2042,14 @@ function startRealtimeSync() {
     .onSnapshot(snap => {
       if (snap.exists) {
         const data = snap.data();
-        results = data.trades || [];
+        results = (data.trades || []).map(r => ({
+          ...r,
+          time: r.time || null,
+          company: r.company || null,
+          date: r.date || null,
+          tradeType: r.tradeType || null,
+          tag: r.tag || null,
+        }));
         if (data.monthlyGoal) {
           monthlyGoal = data.monthlyGoal;
           const goalInput = document.getElementById('monthlyGoalInput');
@@ -2067,10 +2074,22 @@ function stopRealtimeSync() {
 
 async function saveToStorage() {
   if (!currentUid) return;
+  // ── SAFETY: never save empty results over existing data ──
+  // This prevents accidental data wipe during loading or auth refresh
+  if (results.length === 0) {
+    try {
+      const existing = await db.collection('journals').doc(currentUid).get();
+      if (existing.exists && (existing.data().trades || []).length > 0) {
+        console.warn('saveToStorage: blocked empty save — existing data preserved');
+        return; // don't overwrite real data with empty array
+      }
+    } catch(e) {}
+  }
   try {
     const lean = results.map(r => ({
       type: r.type, pnl: r.pnl ?? null,
       company: r.company || '', date: r.date || '',
+      time: r.time || '',
       tradeType: r.tradeType || '', tag: r.tag || '',
       rowIndex: r.rowIndex || null
     }));
@@ -2086,10 +2105,22 @@ async function saveToStorage() {
 
 async function loadFromStorage() {
   if (!currentUid) return;
-  // Just start the real-time listener — it will populate results automatically
   startRealtimeSync();
-  // Wait briefly for first snapshot to arrive
-  await new Promise(resolve => setTimeout(resolve, 600));
+  // Wait for first snapshot — up to 3 seconds on slow connections
+  await new Promise(resolve => {
+    const timeout = setTimeout(resolve, 3000);
+    const origSnap = unsubscribeSnapshot;
+    // Resolve early if snapshot already populated results
+    let checks = 0;
+    const poll = setInterval(() => {
+      checks++;
+      if (results.length > 0 || checks > 20) {
+        clearInterval(poll);
+        clearTimeout(timeout);
+        resolve();
+      }
+    }, 150);
+  });
 }
 
 // ══ CONFETTI ══════════════════════════════════════════
